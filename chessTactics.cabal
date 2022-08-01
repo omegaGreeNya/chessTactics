@@ -1,0 +1,84 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           chessTactics
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/OmegaGreeNya/chessTactics#readme>
+homepage:       https://github.com/OmegaGreeNya/chessTactics#readme
+bug-reports:    https://github.com/OmegaGreeNya/chessTactics/issues
+author:         GreenCake (Nikolai)
+maintainer:     megamancake@yandex.ru
+copyright:      2022 GreenCake (Nikolai)
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/OmegaGreeNya/chessTactics
+
+library
+  exposed-modules:
+      Game
+      Render
+      Systems
+      Systems.Init
+      Types
+      Types.Render
+      Types.Time
+      World
+      World.Components
+  other-modules:
+      Paths_chessTactics
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns
+  build-depends:
+      aeson
+    , apecs
+    , base >=4.7 && <5
+    , containers
+    , linear
+    , text
+  default-language: Haskell2010
+
+executable chessTactics-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_chessTactics
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , apecs
+    , base >=4.7 && <5
+    , chessTactics
+    , containers
+    , linear
+    , text
+  default-language: Haskell2010
+
+test-suite chessTactics-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_chessTactics
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , apecs
+    , base >=4.7 && <5
+    , chessTactics
+    , containers
+    , linear
+    , text
+  default-language: Haskell2010

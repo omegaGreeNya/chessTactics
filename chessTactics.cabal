@@ -25,11 +25,22 @@ source-repository head
 
 library
   exposed-modules:
+      Core.Game.Interpreter
+      Core.Game.Language
+      Core.Lang.Interpreter
+      Core.Lang.Language
       Game
+      Initialization
+      Interpreters
+      Language
       Render
       Systems
       Systems.Init
+      Systems.Render
       Types
+      Types.Game
+      Types.Game.Config
+      Types.Game.Handle
       Types.Render
       Types.Time
       World
@@ -38,13 +49,17 @@ library
       Paths_chessTactics
   hs-source-dirs:
       src
+  default-extensions:
+      OverloadedStrings
   ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns
   build-depends:
       aeson
     , apecs
     , base >=4.7 && <5
     , containers
+    , free
     , linear
+    , sdl2
     , text
   default-language: Haskell2010
 
@@ -54,6 +69,8 @@ executable chessTactics-exe
       Paths_chessTactics
   hs-source-dirs:
       app
+  default-extensions:
+      OverloadedStrings
   ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
@@ -61,7 +78,9 @@ executable chessTactics-exe
     , base >=4.7 && <5
     , chessTactics
     , containers
+    , free
     , linear
+    , sdl2
     , text
   default-language: Haskell2010
 
@@ -72,6 +91,8 @@ test-suite chessTactics-test
       Paths_chessTactics
   hs-source-dirs:
       test
+  default-extensions:
+      OverloadedStrings
   ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
@@ -79,6 +100,8 @@ test-suite chessTactics-test
     , base >=4.7 && <5
     , chessTactics
     , containers
+    , free
     , linear
+    , sdl2
     , text
   default-language: Haskell2010

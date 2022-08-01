@@ -11,7 +11,6 @@ module World
    ) where
 
 import Apecs
-import Apecs.TH
 
 import World.Components
 

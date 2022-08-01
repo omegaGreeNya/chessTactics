@@ -1,36 +1,28 @@
 -- | Game loop module
 module Game
-   ( run
+   ( chessGame
    ) where
 
-import Apecs (runSystem)
+import Control.Monad (unless)
 
--- << ECS
-import Systems (initSystem, stepSystem, drawSystem)
-import World (World, initWorld)
+import Language
+import Systems (initSystem, stepSystem, drawSystem, isGameOver)
+import Types (GameHandle)
+import World (World)
 
 
--- | Creates world with intities and runs systems-loops to modify/render world
-run :: a -> IO ()
-run _ = do
+-- | Inits ECS and launch game loop
+chessGame :: GameHandle -> LangL ()
+chessGame h = do
    w <- initWorld
-   -- ^ Creates world record with all storage references
-   runSystem initSystem w
-   -- fork phisic thread here
-   loopPhysics w
-   -- fork logic thread here
-   -- loopLogic w
-   -- fork render thread here
-   -- loopRender
+   applySystem w initSystem
+   gameLoop h w
 
-loopPhysics :: World -> IO ()
-loopPhysics w = do
-   runSystem (stepSystem (0.1)) w
-   -- step phisic by decimal of second
-   loopPhysics w
-
-loopRender :: World -> IO ()
-loopRender w = do
-   runSystem drawSystem w
-   --SDL.delay ?fps?
-   loopRender w
+-- | Game loop
+gameLoop :: GameHandle -> World -> LangL ()
+gameLoop h w = do
+   w `applySystem` (stepSystem (0.1))
+   w `applySystem` drawSystem
+   gameOver <- w `applySystem` isGameOver
+   unless gameOver $
+      gameLoop h w

@@ -1,14 +1,17 @@
 -- TO DO
--- Add stm and fork system threads
+-- Add stm and fork ECS-system threads
 module Main where
 
-import Game (run)
+import Game (chessGame)
+
+import Interpreters (launchGame)
+import Language
+
+import Types.Game.Config (defaultConfig)
 
 main :: IO ()
-main = do
-   -- gameHandle <- initGame
-   run "WIP"
-   -- shutdownGame gameHandle
-
-initGame = undefined
-shutdownGame = undefined
+main = launchGame $ do
+   gameHandle <- initGame defaultConfig
+   run gameHandle (chessGame gameHandle)
+   -- ^ i know it's ugly, i will rework
+   shutDown gameHandle

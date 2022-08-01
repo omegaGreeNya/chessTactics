@@ -4,3 +4,4 @@ module Types
 
 import Types.Render as X
 import Types.Time as X
+import Types.Game as X

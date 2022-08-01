@@ -2,40 +2,47 @@
 module Systems 
    ( initSystem
    , stepSystem
+   , isGameOver
    , drawSystem
    ) where
 
-import Apecs (cmap, cmapM_)
+import Control.Concurrent (threadDelay)
+
+import Apecs (cmap, cfold)
 import Control.Monad.IO.Class (liftIO)
 import Linear.V2
 
-import Render (renderPicture)
-import Types
+import Types (GameHandle(..), StepTime)
 import World (System')
 import World.Components
 
 import Systems.Init (initSystem)
+import Systems.Render (drawSystem)
 
-stepSystem :: StepTime -> System' ()
-stepSystem step = do
+stepSystem :: StepTime -> GameHandle -> System' ()
+stepSystem dt = const (stepSystem' dt)
+
+stepSystem' :: StepTime -> System' ()
+stepSystem' step = do
    moveEnts step
-   debugSystem
-
-drawSystem :: System' ()
-drawSystem = do
-   renderEnts
+   --debugSystem
 
 moveEnts :: StepTime -> System' ()
 moveEnts step =  do
    cmap $ \(CPosition p, CVelocity v) -> CPosition (p + (v * (V2 step step)))
 
-renderEnts :: System' ()
-renderEnts = do
-   -- clear sreen
-   cmapM_ $ \(CRenderable pic) ->
-      liftIO $ renderPicture pic
+isGameOver :: GameHandle -> System' (Bool)
+isGameOver = const isGameOver'
+
+-- returns true then some entity position by x goes over 100 somethings
+isGameOver' :: System' (Bool)
+isGameOver' = do
+   liftIO $ threadDelay 1000
+   x <- cfold (\x (CPosition (V2 x' _)) -> max x x') 0
+   return $ (abs x) > 100
 
 -- <<< Debugging
+{-
 debugSystem :: System' ()
 debugSystem = do
    printPosition
@@ -44,4 +51,5 @@ printPosition :: System' ()
 printPosition = do
    cmapM_ $ \(CPosition p) ->
       liftIO $ putStrLn (show (CPosition p))
+-}
 -- >>>

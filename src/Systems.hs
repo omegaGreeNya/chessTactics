@@ -6,10 +6,9 @@ module Systems
    , drawSystem
    ) where
 
-import Control.Concurrent (threadDelay)
-
 import Apecs (cmap, cfold)
 import Control.Monad.IO.Class (liftIO)
+import Control.Concurrent (threadDelay)
 import Linear.V2
 
 import Types (GameHandle(..), StepTime)

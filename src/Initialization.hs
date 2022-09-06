@@ -9,11 +9,14 @@ module Initialization
 
 import qualified SDL
 
-import Types (GameConfig(..), SDLConfig(..)
-             ,GameHandle(..), SDLHandle(..))
+import Types
+   (GameConfig(..), SDLConfig(..), GameHandle(..), SubSystemsHandle(..), SDLHandle(..), AppCaches(..))
+
+import Stores.Cache.Class (new)
 
 initGame :: GameConfig -> IO GameHandle
 initGame GameConfig{..} = do
+   -- << SubSystems initialization
    SDL.initialize [SDL.InitVideo]
    -- ^ Init SDL
    
@@ -22,10 +25,19 @@ initGame GameConfig{..} = do
    let hSDL = SDLHandle{..}
    -- ^ SDL handle construction
    
+   let hSystems = SubSystemsHandle{..}
+   -- >> 
+   
+   -- << Caches initialization
+   textureCache <- new
+   let hCaches = AppCaches{..}
+   -- ^ Init caches.
+   -- >>
+   
    return GameHandle{..}
 
 shutdownGame :: GameHandle -> IO ()
 shutdownGame GameHandle{..} = do
-   SDL.destroyRenderer (hRenderer hSDL)
-   SDL.destroyWindow (hWindow hSDL)
+   SDL.destroyRenderer (hRenderer $ hSDL hSystems)
+   SDL.destroyWindow (hWindow $ hSDL hSystems)
    SDL.quit

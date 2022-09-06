@@ -25,24 +25,43 @@ source-repository head
 
 library
   exposed-modules:
+      Constants
       Core.Game.Interpreter
       Core.Game.Language
       Core.Lang.Interpreter
       Core.Lang.Language
+      Core.ResourceManager.Interpreter
+      Core.ResourceManager.Language
       Game
+      Game.ResourceManager
       Initialization
       Interpreters
       Language
       Render
+      Resource
+      Resource.Class
+      Resource.Texture
+      Stores.Cache.Class
+      Stores.Cache.Texture
+      Stores.HashMap
       Systems
       Systems.Init
+      Systems.Init.Caches
       Systems.Render
       Types
+      Types.App
+      Types.Config.Images
       Types.Game
       Types.Game.Config
       Types.Game.Handle
-      Types.Render
+      Types.Game.SubSystems
+      Types.Path
+      Types.Picture
+      Types.Stores
+      Types.Stores.HashMap
       Types.Time
+      Utils
+      Utils.Directory
       World
       World.Components
   other-modules:
@@ -57,9 +76,13 @@ library
     , apecs
     , base >=4.7 && <5
     , containers
+    , directory
+    , filepath
     , free
+    , hashtables
     , linear
     , sdl2
+    , sdl2-image
     , text
   default-language: Haskell2010
 
@@ -78,9 +101,13 @@ executable chessTactics-exe
     , base >=4.7 && <5
     , chessTactics
     , containers
+    , directory
+    , filepath
     , free
+    , hashtables
     , linear
     , sdl2
+    , sdl2-image
     , text
   default-language: Haskell2010
 
@@ -100,8 +127,12 @@ test-suite chessTactics-test
     , base >=4.7 && <5
     , chessTactics
     , containers
+    , directory
+    , filepath
     , free
+    , hashtables
     , linear
     , sdl2
+    , sdl2-image
     , text
   default-language: Haskell2010

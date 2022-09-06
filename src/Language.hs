@@ -4,5 +4,6 @@ module Language
 
 import Core.Game.Language as X
 import Core.Lang.Language as X
+import Core.ResourceManager.Language as X
 
 

@@ -1,5 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
+-- TO DO
+-- AppCacheConfig
 module Types.Game.Config
    ( GameConfig(..)
    , SDLConfig(..)
@@ -11,6 +13,7 @@ import qualified SDL
 
 data GameConfig = GameConfig
    { cfgSDL :: SDLConfig
+   --, cfgCaches :: AppCacheConfig
    , cfgWindowName :: Text
    }
 

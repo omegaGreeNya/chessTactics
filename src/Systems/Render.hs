@@ -16,11 +16,14 @@ import World.Components
 -- >>
 
 import Render (flush, renderPicture, present)
-import Types ( GameHandle(..), SDLHandle(..)
+import Types ( GameHandle(..), SubSystemsHandle(..), SDLHandle(..)
              , Picture(..))
 
 drawSystem :: GameHandle -> System' ()
-drawSystem h@GameHandle{..} = do
+drawSystem GameHandle{..} = drawSystem' hSystems
+
+drawSystem' :: SubSystemsHandle -> System' ()
+drawSystem' h@SubSystemsHandle{..} = do
    liftIO $ flush (hRenderer hSDL)
    -- ^ clean up
    renderBackground h
@@ -33,14 +36,14 @@ drawSystem h@GameHandle{..} = do
 
 -- renders everyting that hasn't in-game position
 -- Background component would be added later
-renderBackground :: GameHandle -> System' ()
-renderBackground GameHandle{..} =
+renderBackground :: SubSystemsHandle -> System' ()
+renderBackground SubSystemsHandle{..} =
    cmapM_ $ \(CRenderable pic, Not :: Not CPosition) ->
       liftIO $ renderPicture (hRenderer hSDL) pic
    
 -- quick and dirty
-renderEnts :: GameHandle -> System' ()
-renderEnts GameHandle{..} = 
+renderEnts :: SubSystemsHandle -> System' ()
+renderEnts SubSystemsHandle{..} = 
    cmapM $ \(CRenderable pic, CPosition pos) -> do
       let pic' = pic{picPosition = P ((fromIntegral . double2Int . (*10)) <$> pos)}
       liftIO $ renderPicture (hRenderer hSDL) pic'

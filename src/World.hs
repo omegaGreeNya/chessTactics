@@ -14,6 +14,6 @@ import Apecs
 
 import World.Components
 
-makeWorld "World" [''CPosition, ''CVelocity, ''CRenderable]
+makeWorld "World" [''CTextureCache, ''CPosition, ''CVelocity, ''CRenderable]
 
 type System' a = System World a

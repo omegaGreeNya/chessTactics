@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+--{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies      #-}
 
 module World.Components where
@@ -7,6 +7,7 @@ import Linear
 import qualified Apecs
 
 import Types (Picture)
+import Stores.Cache.Texture (TextureCache)
 
 -- | Entity 2-d position on map (not on screen)
 data CPosition = CPosition
@@ -32,3 +33,21 @@ data CRenderable = CRenderable
 
 instance Apecs.Component CRenderable where
    type Storage CRenderable = Apecs.Map CRenderable
+
+-- << Caches
+newtype CTextureCache = CTextureCache TextureCache
+
+-- | DUMMY INSTANCES FOR APECS MACHINERY DO NOT USE 
+-- DO NOT USE DO NOT USE DO NOT USE DO NOT USE DO NOT USE DO NOT USE 
+instance Semigroup CTextureCache where
+   (<>) = const
+
+-- | DUMMY INSTANCES FOR APECS MACHINERY DO NOT USE 
+-- DO NOT USE DO NOT USE DO NOT USE DO NOT USE DO NOT USE DO NOT USE 
+instance Monoid CTextureCache where
+   mempty = error "CTextureCache was used without setting it's value"
+-- Very sorry about error, but this is Apecs fault.. =)
+
+instance Apecs.Component CTextureCache where
+   type Storage CTextureCache = Apecs.Global CTextureCache
+-- >>

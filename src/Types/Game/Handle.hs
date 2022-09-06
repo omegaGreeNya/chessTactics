@@ -1,15 +1,12 @@
 module Types.Game.Handle
    ( GameHandle (..)
-   , SDLHandle (..)
    ) where
 
-import qualified SDL
+import Types.Game.SubSystems (SubSystemsHandle)
+import Types.App (AppCaches)
 
+-- | GameHandle contains all handles, all global mutables.
 data GameHandle = GameHandle
-   { hSDL :: SDLHandle 
-   }
-   
-data SDLHandle = SDLHandle
-   { hWindow   :: SDL.Window
-   , hRenderer :: SDL.Renderer
+   { hSystems :: SubSystemsHandle
+   , hCaches :: AppCaches
    }

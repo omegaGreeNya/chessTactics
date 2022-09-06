@@ -10,8 +10,10 @@ import Language
 import Types.Game.Config (defaultConfig)
 
 main :: IO ()
-main = launchGame $ do
+main = launchGame mainGame
+   
+mainGame :: GameL ()
+mainGame = do
    gameHandle <- initGame defaultConfig
-   run gameHandle (chessGame gameHandle)
-   -- ^ i know it's ugly, i will rework
+   run gameHandle chessGame
    shutDown gameHandle

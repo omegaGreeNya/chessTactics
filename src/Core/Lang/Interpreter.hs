@@ -2,7 +2,8 @@
 
 -- TO DO
 -- IMPLEMENT FORKING
-module Core.Lang.Interpreter where
+module Core.Lang.Interpreter 
+   (langInterpret) where
 
 import qualified Apecs (runWith)
 import Control.Monad.Free.Church (foldF)
@@ -10,6 +11,7 @@ import Control.Monad.Free.Church (foldF)
 import Types.Game.Handle (GameHandle)
 import World (initWorld)
 
+import Core.ResourceManager.Interpreter (runResourceManager)
 import qualified Core.Lang.Language as L
 
 langInterpretF :: GameHandle -> L.LangF a -> IO a
@@ -19,8 +21,8 @@ langInterpretF _ (L.InitWorld next) = do
 langInterpretF h (L.ApplySystem w system next) = do
    result <- Apecs.runWith w (system h)
    return $ next result
-langInterpretF h (L.ForkSystem w system next) = do
-   result <- Apecs.runWith w (system h)
+langInterpretF h (L.EvalResourceManager rmScript next) = do
+   result <- runResourceManager h (rmScript h)
    return $ next result
 
 langInterpret :: GameHandle -> L.LangL a -> IO a

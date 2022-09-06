@@ -27,9 +27,13 @@ dependencies:
 - aeson
 - apecs
 - containers
+- directory
+- filepath
 - free
 - linear
+- hashtables
 - sdl2
+- sdl2-image
 - text
 
 ghc-options:

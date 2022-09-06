@@ -6,6 +6,7 @@
 -- or move error handling OUTSIDE the script =)
 module Game.ResourceManager
    ( fillCaches
+   , flushCaches
    ) where
 
 import Language
@@ -24,3 +25,7 @@ cacheAllFiles :: (CacheableResource cache)
 cacheAllFiles cache path = do
    paths <- scanDirectory path
    mapM_ (cacheResourceFromSource cache) $ map LocalPath paths
+
+flushCaches :: GameHandle -> ResourceManagerL ()
+flushCaches GameHandle{..} = do
+   flushCache (textureCache hCaches)

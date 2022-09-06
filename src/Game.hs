@@ -8,7 +8,7 @@ import Control.Monad (unless)
 import Language
 import Systems (initSystem, stepSystem, drawSystem, isGameOver)
 import World (World)
-import Game.ResourceManager (fillCaches)
+import Game.ResourceManager (fillCaches, flushCaches)
 
 
 -- | Inits ECS and launch game loop
@@ -21,6 +21,10 @@ chessGame = do
    applySystem w initSystem
    -- ^ Fills world first state
    gameLoop w
+   -- ^ Run game loop
+   evalResourceManager flushCaches
+   -- ^ Free all hardware memory, and we done.
+   
 
 -- | Game loop
 gameLoop :: World -> LangL ()

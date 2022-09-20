@@ -17,7 +17,7 @@ import Stores.Cache.Class (new)
 initGame :: GameConfig -> IO GameHandle
 initGame GameConfig{..} = do
    -- << SubSystems initialization
-   SDL.initialize [SDL.InitVideo]
+   SDL.initializeAll
    -- ^ Init SDL
    
    hWindow <- SDL.createWindow cfgWindowName (cfgSDLWindow cfgSDL)

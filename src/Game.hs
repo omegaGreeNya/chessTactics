@@ -1,15 +1,15 @@
 -- | Game loop module
+
+-- Suggestion: hide explicit w tossing, behind the script, like with GameHandle.
 module Game
    ( chessGame
    ) where
 
-import Control.Monad (unless)
-
 import Language
-import Systems (initSystem, stepSystem, drawSystem, isGameOver)
-import World (World)
+import Systems (initSystem, isGameOver)
 import Game.ResourceManager (fillCaches, flushCaches)
 
+import Game.Loop (loopStepScript, initLoopState)
 
 -- | Inits ECS and launch game loop
 chessGame :: LangL ()
@@ -20,17 +20,7 @@ chessGame = do
    -- ^ Inits clear world state
    applySystem w initSystem
    -- ^ Fills world first state
-   gameLoop w
+   runGameLoop w isGameOver loopStepScript initLoopState 
    -- ^ Run game loop
    evalResourceManager flushCaches
    -- ^ Free all hardware memory, and we done.
-   
-
--- | Game loop
-gameLoop :: World -> LangL ()
-gameLoop w = do
-   w `applySystem` (stepSystem (0.1))
-   w `applySystem` drawSystem
-   gameOver <- w `applySystem` isGameOver
-   unless gameOver $
-      gameLoop w

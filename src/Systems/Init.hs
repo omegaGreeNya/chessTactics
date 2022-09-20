@@ -32,7 +32,7 @@ initEnts :: GameHandle -> System' ()
 initEnts GameHandle{..} = do
    newEntity_ 
       ( CPosition (V2 0 0)
-      , CVelocity (V2 (1) (1))
+      , CVelocity (V2 (0.1) (0.1))
       , CRenderable 
          (Picture 
             (P (V2 0 0))

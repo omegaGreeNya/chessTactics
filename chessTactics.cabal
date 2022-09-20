@@ -32,8 +32,14 @@ library
       Core.Lang.Language
       Core.ResourceManager.Interpreter
       Core.ResourceManager.Language
+      Core.SubSys.Interpreter
+      Core.SubSys.Language
+      Core.SystemControl.Interpreter
+      Core.SystemControl.Language
       Game
+      Game.Loop
       Game.ResourceManager
+      Game.SystemsStack
       Initialization
       Interpreters
       Language
@@ -50,7 +56,6 @@ library
       Systems.Render
       Types
       Types.App
-      Types.Config.Images
       Types.Game
       Types.Game.Config
       Types.Game.Handle
@@ -59,9 +64,11 @@ library
       Types.Picture
       Types.Stores
       Types.Stores.HashMap
+      Types.SystemsStack
       Types.Time
       Utils
       Utils.Directory
+      Utils.Time
       World
       World.Components
   other-modules:

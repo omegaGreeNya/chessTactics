@@ -69,6 +69,7 @@ library
       Types.Time
       Utils
       Utils.Directory
+      Utils.SDL
       Utils.Time
       World
       World.Components
@@ -91,7 +92,9 @@ library
     , linear
     , sdl2
     , sdl2-image
+    , sdl2-ttf
     , text
+    , vector
   default-language: Haskell2010
 
 executable chessTactics-exe
@@ -116,7 +119,9 @@ executable chessTactics-exe
     , linear
     , sdl2
     , sdl2-image
+    , sdl2-ttf
     , text
+    , vector
   default-language: Haskell2010
 
 test-suite chessTactics-test
@@ -142,5 +147,7 @@ test-suite chessTactics-test
     , linear
     , sdl2
     , sdl2-image
+    , sdl2-ttf
     , text
+    , vector
   default-language: Haskell2010

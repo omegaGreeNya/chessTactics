@@ -4,26 +4,29 @@
 module StackMetrics.Utils
    ( StackMetricsHandle
    , StackMetrics
+   , StackPulse
    , StackId
    , withStackMetricsHandle
    , initStackMetrics
    , getNewStackId'
    , getNewStackId
-   , getStackExecPerSec'
-   , getStackExecPerSec
    , markStackExecution'
    , markStackExecution
+   , getStackPulse
+   , getStackPulses
+   , unwrapStackPulse
    ) where
 
-import Data.IORef ( IORef, newIORef, readIORef
-                  , writeIORef, modifyIORef)
-import qualified Data.IntMap as Map
+import Data.IORef (newIORef, readIORef, writeIORef)
+import qualified Data.IntMap.Strict as Map
+import qualified Data.Vector.Mutable as V
 
+import Constants (epsHistoryLength)
 import Types.Game.Handle (GameHandle(..))
 import Types.Game.SubSystems (SubSystemsHandle(..))
-import Types.StackMetrics (StackMetrics(..), StackMetricsHandle(..), StackId)
+import Types.StackMetrics ( StackMetrics(..), StackMetricsHandle(..)
+                          , StackPulse(..), StackId)
 import Types.Time (HiResTime)
-
 
 
 -- | Creates empty handle.
@@ -47,8 +50,16 @@ getNewStackId' StackMetricsHandle{..} callTime = do
    lastId <- readIORef hLastId
    let newId = lastId + 1
    writeIORef hLastId newId
+   
    metricsMap <- readIORef hMetricsMap
-   newMetrics <- newIORef $ StackMetrics callTime callTime
+   
+   stackLastCallTime <- newIORef callTime 
+   
+   clearPulse <- V.replicate epsHistoryLength 0 -- fst elem has index 0
+   cursor <- newIORef 1 -- 1 is the fst position to write eps.
+   let stackPulse = StackPulse clearPulse cursor
+       newMetrics = StackMetrics{..}
+   
    writeIORef hMetricsMap $ Map.insert newId newMetrics metricsMap
    return newId
 
@@ -58,26 +69,60 @@ getNewStackId h callTime = do
    mId <- withStackMetricsHandle h (flip getNewStackId' $ callTime)
    return $ maybe 0 id mId
 
--- | Lookups StackMetricsRef by StackId
-getStackMetricsRef :: StackMetricsHandle -> StackId -> IO (Maybe (IORef StackMetrics))
-getStackMetricsRef StackMetricsHandle{..} stackId = do
+-- | Lookups stack metrics by StackId
+getStackMetrics :: StackMetricsHandle -> StackId -> IO (Maybe StackMetrics)
+getStackMetrics StackMetricsHandle{..} stackId = do
    metricsMap <- readIORef hMetricsMap
    return $ Map.lookup stackId metricsMap
 
--- | Sets prev call time as last call time,
--- and sets last call time as provided time.
-updateStackMetrics :: HiResTime -> StackMetrics -> StackMetrics
-updateStackMetrics callTime StackMetrics{..} = 
-   StackMetrics callTime stackLastCallTime
+-- | '1 sec / time between last two cals'
+calculateExecsPerSec :: HiResTime -- ^ Last call time
+                     -> HiResTime -- ^ Prev call time
+                     -> Double    -- ^ Resulted eps
+calculateExecsPerSec stackLastCallTime stackPrevCallTime =
+   let timeDiff = stackLastCallTime - stackPrevCallTime
+   in if timeDiff == 0
+      then 1
+      else 1000 / (fromIntegral timeDiff)
+
+-- | Updates provided pulse with new eps.
+updatePulse :: Double         -- ^ eps to add.
+            -> StackPulse     -- ^ Pulse.
+            -> IO ()
+updatePulse eps StackPulse{..} = do
+   cursorPos <- readIORef pulseCursor
+   
+   V.modify pulse (const eps) cursorPos         -- add eps to history
+   V.modify pulse                               -- update max
+            (\x -> max x eps) 
+            0 
+   
+   let newPos = 
+         if cursorPos == (epsHistoryLength - 1)
+         then 0 
+         else cursorPos + 1
+   
+   writeIORef pulseCursor newPos
+
+-- | Updates provided metrics with new execution time
+updateStackMetrics :: HiResTime -> StackMetrics -> IO ()
+updateStackMetrics callTime StackMetrics{..} = do
+   prevCallTime <- readIORef stackLastCallTime
+   let eps = calculateExecsPerSec callTime prevCallTime
+   
+   writeIORef stackLastCallTime callTime
+   -- ^ Update last call time
+   updatePulse eps stackPulse
+   -- ^ Pump pulse
 
 -- | If provided id exist, then writes metrics.
 -- Otherwise does nothing.
 markStackExecution' :: StackMetricsHandle -> StackId -> HiResTime -> IO ()
 markStackExecution' h stackId callTime = do
-   mMetricsRef <- getStackMetricsRef h stackId
-   case mMetricsRef of
-      Just metricsRef -> modifyIORef metricsRef (updateStackMetrics callTime)
-      _               -> return ()
+   mMetrics <- getStackMetrics h stackId
+   case mMetrics of
+      Just stackMetrics -> updateStackMetrics callTime stackMetrics
+      _                 -> return ()
 
 -- | GameHandle wrapper version.
 markStackExecution :: GameHandle -> StackId -> HiResTime -> IO ()
@@ -85,29 +130,36 @@ markStackExecution h stackId callTime =
    withStackMetricsHandle h (\smH -> markStackExecution' smH stackId callTime)
    >> return ()
 
-
--- | Lookups stack metrics by StackId
-getStackMetrics :: StackMetricsHandle -> StackId -> IO (Maybe StackMetrics)
-getStackMetrics h stackId = do
-   mMetricsRef <- getStackMetricsRef h stackId
-   case mMetricsRef of
-      Just metricsRef -> fmap Just $ readIORef metricsRef
-      _               -> return Nothing
-
--- | '1 sec / time between last two cals'
-calculateExecsPerSec :: StackMetrics -> Double
-calculateExecsPerSec StackMetrics{..} =
-   let timeDiff = stackLastCallTime - stackPrevCallTime
-   in if timeDiff == 0
-      then 1
-      else 1000 / (fromIntegral timeDiff)
-
--- | Returns 0 if stack not found.
--- Otherwise returns '1 sec / time between last two calls`
-getStackExecPerSec' :: StackMetricsHandle -> StackId -> IO Double
-getStackExecPerSec' h stackId = do
+-- | 
+getStackPulse :: StackMetricsHandle -> StackId -> IO (Maybe StackPulse)
+getStackPulse h stackId = do
    mMetrics <- getStackMetrics h stackId
-   return $ maybe 0 calculateExecsPerSec mMetrics
+   return $ 
+      case mMetrics of
+         Just stackMetrics -> Just $ stackPulse stackMetrics
+         _                 -> Nothing
 
-getStackExecPerSec :: GameHandle -> StackId -> IO (Maybe Double)
-getStackExecPerSec h stackId = withStackMetricsHandle h (flip getStackExecPerSec' $ stackId)
+getStackPulses :: StackMetricsHandle -> IO ([(StackId, StackPulse)])
+getStackPulses StackMetricsHandle{..} = do
+   metricsMap <- readIORef hMetricsMap
+   return . map (fmap stackPulse) $ Map.toList metricsMap
+
+-- | Unwraps StackPulse into pair of max eps in history
+-- and all last epsHistoryLength eps in history
+unwrapStackPulse :: StackPulse -> IO (Double, [Double])
+unwrapStackPulse StackPulse{..} = do
+   maxEps <- V.read pulse 0
+   
+   cursor <- readIORef pulseCursor
+   let getNext x = if x > 1 then (x - 1) else (epsHistoryLength - 1)
+       reader :: Int -> IO [Double]
+       reader n = do
+         eps <- V.read pulse n
+         let n' = getNext n
+         if n' == getNext cursor
+         then return [eps]
+         else do
+            history <- reader n'
+            return $ eps : history 
+   pulseList <- reader $ getNext cursor
+   return (maxEps, pulseList)

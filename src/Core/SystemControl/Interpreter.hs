@@ -87,7 +87,6 @@ interpretSystemControlF h w (L.RunSystemLoop conditionSys initState stepScript n
          running <- Apecs.runWith w conditionSys
          when running $ do
             loopState' <- runSystemController h w (stepScript loopState)
-            --drawMetrics h
             loop loopState'
          return ()
    _ <- loop initState

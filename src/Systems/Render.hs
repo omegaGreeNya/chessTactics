@@ -16,42 +16,52 @@ import World.Components
 -- >>
 
 import Render (flush, renderPicture, present)
+import StackMetrics (drawMetrics)
 import Types ( GameHandle(..), SubSystemsHandle(..), SDLHandle(..)
              , Picture(..))
 
-drawSystem :: GameHandle -> Double -> System' ()
-drawSystem GameHandle{..} interpTime = drawSystem' hSystems interpTime
+import qualified SDL
 
-drawSystem' :: SubSystemsHandle -> Double -> System' ()
-drawSystem' h@SubSystemsHandle{..} interpTime = do
-   liftIO $ flush (hRenderer hSDL)
+drawSystem :: GameHandle -> Double -> System' ()
+drawSystem h@GameHandle{..} interpTime = do
+   let renderer = hRenderer . hSDL $ hSystems
+   liftIO $ flush renderer
    -- ^ clean up
+   drawSystem' renderer interpTime
+   -- ^ draw game
+   liftIO $ drawMetrics h
+   -- ^ draw metrics if possible
+   liftIO $ present renderer
+   -- ^ Swap buffers
+
+drawSystem' :: SDL.Renderer -> Double -> System' ()
+drawSystem' h interpTime = do
    renderBackground h
    -- ^ draw backghround
    renderEnts h interpTime
    -- ^ draw actors
    --renderUI
    -- ^ draw UI
-   liftIO $ present (hRenderer hSDL)
+   
 
 -- renders everyting that hasn't in-game position
 -- Background component would be added later
-renderBackground :: SubSystemsHandle -> System' ()
-renderBackground SubSystemsHandle{..} =
+renderBackground :: SDL.Renderer -> System' ()
+renderBackground h =
    cmapM_ $ \(CRenderable pic, Not :: Not CPosition) ->
-      liftIO $ renderPicture (hRenderer hSDL) pic
+      liftIO $ renderPicture h pic
    
 -- quick and dirty
-renderEnts :: SubSystemsHandle -> Double -> System' ()
-renderEnts SubSystemsHandle{..} interpTime = do
+renderEnts :: SDL.Renderer -> Double -> System' ()
+renderEnts h interpTime = do
    cmapM $ \(CRenderable pic, CPosition pos, Not :: Not CVelocity) -> do
       let pic' = pic{picPosition = P (posToRenderPos pos)}
-      liftIO $ renderPicture (hRenderer hSDL) pic'
+      liftIO $ renderPicture h pic'
       return $ CRenderable pic'
    cmapM $ \(CRenderable pic, CPosition pos, CVelocity vel) -> do
       let interpPos = pos + vel * (V2 interpTime interpTime)
           pic' = pic{picPosition = P (posToRenderPos interpPos)}
-      liftIO $ renderPicture (hRenderer hSDL) pic'
+      liftIO $ renderPicture h pic'
       return $ CRenderable pic'
    return ()
 

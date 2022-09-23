@@ -5,7 +5,7 @@ packages:
 extra-deps:
 - git: https://github.com/haskell-game/sdl2-image.git
   commit: 382395c763b473032721c71921b5c9241142178f
-#- git: https://github.com/haskell-game/sdl2-ttf.git
-#  commit: 26631ca9347413921ff91137ef192086d93bbb02
+- git: https://github.com/haskell-game/sdl2-ttf.git
+  commit: 4a92a6a9d267e3fba2c15668fa37235e2cb35033
 #- git: https://github.com/haskell-game/sdl2-mixer.git
 #  commit: c32e9517f81327f6d73b55e17f595f17824eb84d

@@ -34,7 +34,9 @@ dependencies:
 - hashtables
 - sdl2
 - sdl2-image
+- sdl2-ttf
 - text
+- vector
 
 ghc-options:
 - -Wall

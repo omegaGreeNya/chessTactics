@@ -4,7 +4,6 @@ module Render
    , renderPicture
    , present
    ) where
-
 import Foreign.C.Types (CInt)
 import Linear
 import Linear.Affine (Point)
@@ -12,6 +11,7 @@ import SDL (($=))
 import qualified SDL
 
 import Types (Picture (..), RenderResource(..), Geometry(..), Clip, Size, Color)
+import Utils (setColor)
 
 renderPicture :: SDL.Renderer -> Picture -> IO ()
 renderPicture renderer (Picture pos (RGeometry color geom)) = 
@@ -50,8 +50,3 @@ flush renderer = do
 
 present :: SDL.Renderer -> IO ()
 present = SDL.present
-
--- << Utility functions
-setColor :: SDL.Renderer -> Color -> IO ()
-setColor renderer color = SDL.rendererDrawColor renderer $= color
--- >>

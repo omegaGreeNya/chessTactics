@@ -43,7 +43,7 @@ initEnts GameHandle{..} = do
          )
       )
    newEntity_
-      (CRenderable (Picture (P (V2 0 0)) (RGeometry ((V4 0 0 maxBound maxBound))(Square (V2 100 1000000)))))
+      (CRenderable (Picture (P (V2 0 0)) (RGeometry ((V4 0 0 maxBound maxBound))(Square (V2 100 10000)))))
    cow <- liftIO $ lookup (textureCache hCaches) ".\\data\\Images\\Cow\\cow_pink.png"
    case cow of
       Nothing -> return ()

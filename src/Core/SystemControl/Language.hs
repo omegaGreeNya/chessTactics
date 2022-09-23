@@ -4,13 +4,21 @@ module Core.SystemControl.Language where
 
 import Control.Monad.Free.Church (F(..), liftF)
 
+import Types.Game.Handle (GameHandle)
 import Types.Time (HiResTime)
-import Types.SystemsStack (SubSysFPS, LastCallTime, MaxSkipFrames, SkippedFrames)
+import Types.SystemsStack ( SubSysFPS, LastCallTime, MaxSkipFrames
+                          , SkippedFrames, SystemsList, SystemsStack)
 import World (System')
 
-import qualified Core.SubSys.Language as L
-
 data SystemControlF next where
+   CreateSystemsStack :: SystemsList systemTime
+                      -- ^ Curently systemTime may be HiResTime (as tics to proceed) 
+                      -- or Double (for interpolation based stacks).
+                      -> (SystemsStack systemTime -> next)
+                      -> SystemControlF next
+   -- ^ 
+   ApplySystem :: (GameHandle -> System' a) -> (a -> next) -> SystemControlF next
+   -- ^ Applies system to world. Useful to apply init systems outside the loop.
    RunSimpleSystem :: System' a -> (a -> next) -> SystemControlF next
    -- ^ Run simple systems, like one that makes a decision based on world state.
    -- It's called 'simple' because it doesn't depends on GameHandle, therefore it can't do much.
@@ -24,15 +32,15 @@ data SystemControlF next where
             --
             -- In case of fixed FPS system will always get constant time to proceed.
             -- Otherwise it will get time to proceed since the last call.
-            -> L.SubSysL HiResTime ()
+            -> SystemsStack HiResTime
             -- ^ Systems Stack.
             -> (LastCallTime -> next) 
             -> SystemControlF next
    -- ^ Runs systems stack with fixed fps, or on every loop step.
    
-   RunInterpolationStack :: (LastCallTime, SubSysFPS, L.SubSysL HiResTime ())
+   RunInterpolationStack :: (LastCallTime, SubSysFPS, SystemsStack HiResTime)
                          -- ^ (The last call of this systemsStack, Subsystem desired executions per second, subsystems stack)
-                         -> (SkippedFrames, MaxSkipFrames, L.SubSysL Double ())
+                         -> (SkippedFrames, MaxSkipFrames, SystemsStack Double)
                          -- ^ ( Current amount of skipped execution of second systemsStack.
                          --   , Maximum amount of skipped execution of this subsystem due too long 
                          --      execution of 1st SysemsStack (MaxSkipFrames >= 0)
@@ -51,19 +59,41 @@ data SystemControlF next where
    -- More to read: https://dewitters.com/dewitters-gameloop/
    -- https://habr.com/ru/post/136878/ (Translation)
    -- https://www.programmersought.com/article/25047833854/
+   
+   RunSystemLoop :: System' Bool
+                 -- ^ While this system applied on World returns True, execution continues.
+                 -> loopState
+                 -- ^ Any loop metadata (lastCallTimes, skippedFrames, etc.)
+                 -> (loopState -> SystemControlL loopState)
+                 -- ^ Script that defines one step of a loop.
+                 -> (() -> next)
+                 -> SystemControlF next
+   -- ^ Runs system in a loop. Basicly the thing that you can call main game loop.
 
 instance Functor SystemControlF where
+   fmap f (CreateSystemsStack sysList next) = CreateSystemsStack sysList (f . next)
+   fmap f (ApplySystem sys next) = ApplySystem sys (f . next)
    fmap f (RunSimpleSystem sys next) = RunSimpleSystem sys (f . next)
-   fmap f (RunStack lastCallTime mFps script next) = RunStack lastCallTime mFps script (f . next)
-   fmap f (RunInterpolationStack fstSys sndSys next) = RunInterpolationStack fstSys sndSys (f . next)
+   fmap f (RunStack lastCallTime mFps sysStack next) = RunStack lastCallTime mFps sysStack (f . next)
+   fmap f (RunInterpolationStack fstSysStack sndSysStack next) = RunInterpolationStack fstSysStack sndSysStack (f . next)
+   fmap f (RunSystemLoop condition stepScript initState next) = RunSystemLoop condition stepScript initState (f . next)
 
 type SystemControlL = F SystemControlF
+
+createSystemsStack :: SystemsList systemTime -> SystemControlL (SystemsStack systemTime)
+createSystemsStack sysList = liftF $ CreateSystemsStack sysList id
+
+applySystem :: (GameHandle -> System' a) -> SystemControlL a
+applySystem sys = liftF $ ApplySystem sys id
 
 runSimpleSystem :: System' a -> SystemControlL a
 runSimpleSystem sys = liftF $ RunSimpleSystem sys id
 
-runStack :: HiResTime -> Maybe SubSysFPS -> L.SubSysL HiResTime () -> SystemControlL LastCallTime
-runStack lastCallTime mFps script = liftF $ RunStack lastCallTime mFps script id
+runStack :: HiResTime -> Maybe SubSysFPS -> SystemsStack HiResTime -> SystemControlL LastCallTime
+runStack lastCallTime mFps sysStack = liftF $ RunStack lastCallTime mFps sysStack id
 
-runInterpolationStack :: (LastCallTime, SubSysFPS, L.SubSysL HiResTime ()) -> (SkippedFrames, MaxSkipFrames, L.SubSysL Double ()) -> SystemControlL (LastCallTime, SkippedFrames)
-runInterpolationStack fstSys sndSys = liftF $ RunInterpolationStack fstSys sndSys id
+runInterpolationStack :: (LastCallTime, SubSysFPS, SystemsStack HiResTime) -> (SkippedFrames, MaxSkipFrames, SystemsStack Double) -> SystemControlL (LastCallTime, SkippedFrames)
+runInterpolationStack fstSysStack sndSysStack = liftF $ RunInterpolationStack fstSysStack sndSysStack id
+
+runSystemLoop :: System' Bool -> loopState -> (loopState -> SystemControlL loopState) -> SystemControlL ()
+runSystemLoop condition initState stepScript = liftF $ RunSystemLoop condition initState stepScript id

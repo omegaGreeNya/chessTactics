@@ -10,11 +10,13 @@ module Types.Game.SubSystems
    , SDLHandle (..)
    ) where
 
+import Types.StackMetrics (StackMetricsHandle)
 import qualified SDL
 
 -- | GOD-SubSys handle record.
 data SubSystemsHandle = SubSystemsHandle
    { hSDL :: SDLHandle
+   , hMetrics :: Maybe StackMetricsHandle
    }
 
 -- | SDL handles.

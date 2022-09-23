@@ -1,20 +1,21 @@
 -- |
 module Game.SystemsStack
-   ( drawStack
-   , stepStack
-   , userInputStack
+   ( createDrawStack
+   , createStepStack
+   , createUserInputStack
    ) where
 
 import Systems (userInputSystem, stepSystem, drawSystem)
 import Types.Time (HiResTime)
+import Types.SystemsStack (SystemsStack)
 
 import Language
 
-stepStack :: SubSysL HiResTime ()
-stepStack = createSystemsStack [stepSystem]
+createStepStack :: SystemControlL (SystemsStack HiResTime)
+createStepStack = createSystemsStack [stepSystem]
    
-drawStack :: SubSysL Double ()
-drawStack = createSystemsStack [drawSystem]
+createDrawStack :: SystemControlL (SystemsStack Double)
+createDrawStack = createSystemsStack [drawSystem]
 
-userInputStack :: SubSysL HiResTime ()
-userInputStack = createSystemsStack [userInputSystem]
+createUserInputStack :: SystemControlL (SystemsStack HiResTime)
+createUserInputStack = createSystemsStack [userInputSystem]

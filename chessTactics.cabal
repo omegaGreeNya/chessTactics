@@ -32,12 +32,10 @@ library
       Core.Lang.Language
       Core.ResourceManager.Interpreter
       Core.ResourceManager.Language
-      Core.SubSys.Interpreter
-      Core.SubSys.Language
       Core.SystemControl.Interpreter
       Core.SystemControl.Language
       Game
-      Game.Loop
+      Game.Control
       Game.ResourceManager
       Game.SystemsStack
       Initialization
@@ -47,6 +45,8 @@ library
       Resource
       Resource.Class
       Resource.Texture
+      StackMetrics
+      StackMetrics.Utils
       Stores.Cache.Class
       Stores.Cache.Texture
       Stores.HashMap
@@ -62,6 +62,7 @@ library
       Types.Game.SubSystems
       Types.Path
       Types.Picture
+      Types.StackMetrics
       Types.Stores
       Types.Stores.HashMap
       Types.SystemsStack
@@ -77,7 +78,7 @@ library
       src
   default-extensions:
       OverloadedStrings
-  ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns
+  ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns -optl-mconsole -optl-mwindows
   build-depends:
       aeson
     , apecs
@@ -101,7 +102,7 @@ executable chessTactics-exe
       app
   default-extensions:
       OverloadedStrings
-  ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns -optl-mconsole -optl-mwindows -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , apecs
@@ -127,7 +128,7 @@ test-suite chessTactics-test
       test
   default-extensions:
       OverloadedStrings
-  ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Werror -Wcompat -Wincomplete-uni-patterns -optl-mconsole -optl-mwindows -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , apecs

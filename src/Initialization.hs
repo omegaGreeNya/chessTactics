@@ -12,6 +12,7 @@ import qualified SDL
 import Types
    (GameConfig(..), SDLConfig(..), GameHandle(..), SubSystemsHandle(..), SDLHandle(..), AppCaches(..))
 
+import StackMetrics (initStackMetrics)
 import Stores.Cache.Class (new)
 
 initGame :: GameConfig -> IO GameHandle
@@ -24,6 +25,12 @@ initGame GameConfig{..} = do
    hRenderer <- SDL.createRenderer hWindow (-1) (cfgSDLRenderer cfgSDL)
    let hSDL = SDLHandle{..}
    -- ^ SDL handle construction
+   
+   hMetrics <- 
+      if cfgUseMetrics
+      then fmap Just $ initStackMetrics
+      else return Nothing
+   -- ^ Stack Metrics handle
    
    let hSystems = SubSystemsHandle{..}
    -- >> 

@@ -41,7 +41,7 @@ updateVelocity _ = do
 -}
 
 -- returns true then some entity position by x goes over 1000 of somethings
-isGameOver :: System' (Bool)
+isGameOver :: System' Bool
 isGameOver = do
    x <- cfold (\x (CPosition (V2 x' _)) -> max x x') 0
    return $ (abs x) > 1000

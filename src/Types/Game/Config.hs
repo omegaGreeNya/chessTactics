@@ -15,6 +15,9 @@ data GameConfig = GameConfig
    { cfgSDL :: SDLConfig
    --, cfgCaches :: AppCacheConfig
    , cfgWindowName :: Text
+   , cfgUseMetrics :: Bool
+   -- ^ Then true, programm will collect and process 
+   -- ECS systems execution meta-data. Like Executions per sec.
    }
 
 data SDLConfig = SDLConfig
@@ -26,6 +29,7 @@ defaultConfig :: GameConfig
 defaultConfig = let
    cfgSDL = SDLConfig defaultSDLWindow defaultSDLRenderer
    cfgWindowName = "WIP"
+   cfgUseMetrics = True
    in GameConfig{..}
 
 defaultSDLWindow :: SDL.WindowConfig

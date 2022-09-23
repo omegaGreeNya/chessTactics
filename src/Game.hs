@@ -6,10 +6,8 @@ module Game
    ) where
 
 import Language
-import Systems (initSystem, isGameOver)
+import Game.Control (gameSystemsRunner)
 import Game.ResourceManager (fillCaches, flushCaches)
-
-import Game.Loop (loopStepScript, initLoopState)
 
 -- | Inits ECS and launch game loop
 chessGame :: LangL ()
@@ -18,9 +16,7 @@ chessGame = do
    -- ^ Fill up all caches this all files
    w <- initWorld
    -- ^ Inits clear world state
-   applySystem w initSystem
-   -- ^ Fills world first state
-   runGameLoop w isGameOver loopStepScript initLoopState 
-   -- ^ Run game loop
+   runECSystems w gameSystemsRunner
+   -- ^ Runs ECS initialization scripts and game loop
    evalResourceManager flushCaches
    -- ^ Free all hardware memory, and we done.

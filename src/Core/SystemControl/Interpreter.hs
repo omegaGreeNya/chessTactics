@@ -5,21 +5,31 @@ import Control.Monad.Free.Church (foldF)
 import qualified Apecs (runWith)
 import qualified SDL.Time as SDL
 
+import StackMetrics (getNewStackId, markStackExecution)
 import Types.Game.Handle (GameHandle)
+import Types.SystemsStack (SystemsStack)
+import Types.Time (HiResTime)
 import Utils (fpsToTics)
 import World (World)
 
-import Core.SubSys.Interpreter (runSystemStack)
 import qualified Core.SystemControl.Language as L
 
 interpretSystemControlF :: GameHandle
                         -> World
                         -> L.SystemControlF a 
                         -> IO a
+interpretSystemControlF h _ (L.CreateSystemsStack sysList next) = do
+   currentTime <- SDL.ticks
+   stackId <- getNewStackId h currentTime
+   return $ next (stackId, sysList)
+interpretSystemControlF h w (L.ApplySystem system next) = do
+   result <- Apecs.runWith w $ system h
+   return $ next result
 interpretSystemControlF _ w (L.RunSimpleSystem system next) = do
    result <- Apecs.runWith w system
    return $ next result
 interpretSystemControlF h w (L.RunStack lastCallTime mFPS sysStack next) = do
+   -- putStrLn "Runned user input stack"
    currentTime <- SDL.ticks
    let deltaTime = currentTime - lastCallTime
        (it'sTime, toProceedTime) =
@@ -31,24 +41,27 @@ interpretSystemControlF h w (L.RunStack lastCallTime mFPS sysStack next) = do
             -- ^ Otherwise, we run systemStack no more often than fps per sec.
             mFPS
    
-   when it'sTime $ 
-      runSystemStack h w toProceedTime sysStack
+   when it'sTime $ do
+      _ <- runSystemStack h w toProceedTime sysStack
+      return ()
    return $ next currentTime
-   
+
 interpretSystemControlF h w
    (L.RunInterpolationStack (lastCallTime, fps, fstStack) (skippedFrames, maxSkipFrames, sndStack) next) = do
+   -- putStrLn "Runned interpolation Stack"
    currentTime <- SDL.ticks
    let ticksToProceed = fpsToTics fps
        deltaTime = currentTime - lastCallTime
        it'sTime = deltaTime >= ticksToProceed
    
-   lastCallTime' <- 
+   lastCallTime' <-
    -- If we execute fst system, then we update lastCallTime.
    -- If not, then lastCallTime stays the same.
       if it'sTime 
       then do
-         _ <- runSystemStack h w ticksToProceed fstStack
-         SDL.ticks
+         (startTime, _) <- runSystemStack h w ticksToProceed fstStack
+         -- putStrLn "Runned fst sys"
+         return startTime
       else
          return lastCallTime
    
@@ -63,11 +76,35 @@ interpretSystemControlF h w
             currentTime' <- SDL.ticks
             let interpolationTime = (fromIntegral $ currentTime' - lastCallTime')/(fromIntegral ticksToProceed)
             _ <- runSystemStack h w interpolationTime sndStack
+            -- putStrLn "Runned snd sys"
             return 0
          else
             return $ skippedFrames + 1
    
    return $ next (lastCallTime', skippedFrames')
+interpretSystemControlF h w (L.RunSystemLoop conditionSys initState stepScript next) = do
+   let loop loopState = do
+         running <- Apecs.runWith w conditionSys
+         when running $ do
+            loopState' <- runSystemController h w (stepScript loopState)
+            --drawMetrics h
+            loop loopState'
+         return ()
+   _ <- loop initState
+   return $ next ()
 
-runOneStepOfGameLoop :: GameHandle -> World -> L.SystemControlL a -> IO a
-runOneStepOfGameLoop h w = foldF $ interpretSystemControlF h w
+runSystemController :: GameHandle -> World -> L.SystemControlL a -> IO a
+runSystemController h w = foldF $ interpretSystemControlF h w
+
+-- << Helper functions
+
+-- | Executes systemsStack writes metrics if possible and returns execution START time
+runSystemStack :: GameHandle -> World -> systemTime -> SystemsStack systemTime -> IO (HiResTime, HiResTime)
+runSystemStack h w time (stackId, systemsList) = do
+   startTime <- SDL.ticks
+   markStackExecution h stackId startTime
+   let f system = Apecs.runWith w $ system h time
+   mapM_ f systemsList
+   endTime <- SDL.ticks
+   return (startTime, endTime)
+-- >>

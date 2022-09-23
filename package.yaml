@@ -41,6 +41,8 @@ ghc-options:
 - -Werror
 - -Wcompat
 - -Wincomplete-uni-patterns
+- -optl-mconsole
+- -optl-mwindows
 
 library:
   source-dirs: src

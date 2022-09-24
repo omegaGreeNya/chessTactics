@@ -40,8 +40,9 @@ import Utils (setColor)
 drawPulse :: SDLHandle -> StackId -> StackPulse -> IO ()
 drawPulse SDLHandle{..} stackId stackPulse = do
    setColor hRenderer $ V4 0 0 0 10
-   (maxEps, pulseList) <- unwrapStackPulse stackPulse
-   let yOffset = fromIntegral $ (pulseHeight + 10) * (stackId - 1)
+   pulseList <- unwrapStackPulse stackPulse
+   let maxEps = foldl max 0 pulseList
+       yOffset = fromIntegral $ (pulseHeight + 10) * (stackId - 1)
        fHeight x = fromIntegral . fromEnum $ (fromIntegral pulseHeight) * (x / maxEps)
        maxX = fromIntegral (epsHistoryLength - 1)
        

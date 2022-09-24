@@ -22,8 +22,8 @@ gameSystemsRunner = do
    -- >> 
    
    -- << Creating SystemsStacks
-   drawStack      <- createDrawStack
    stepStack      <- createStepStack 
+   drawStack      <- createDrawStack
    userInputStack <- createUserInputStack
    -- >>
    

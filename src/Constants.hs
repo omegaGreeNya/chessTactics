@@ -16,9 +16,9 @@ textureFolder = ".\\data\\Images\\"
 
 -- << Metrics
 
--- | 0 element is Maximum eps.
+-- | How many eps for StackMetrics stored in history
 epsHistoryLength :: Int
-epsHistoryLength = 100 + 1
+epsHistoryLength = 100
 
 -- | In pixels.
 pulseHeight :: Int

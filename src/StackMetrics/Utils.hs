@@ -92,17 +92,14 @@ updatePulse :: Double         -- ^ eps to add.
 updatePulse eps StackPulse{..} = do
    cursorPos <- readIORef pulseCursor
    
-   V.modify pulse (const eps) cursorPos         -- add eps to history
-   V.modify pulse                               -- update max
-            (\x -> max x eps) 
-            0 
+   V.modify pulse (const eps) cursorPos -- add eps to history
    
-   let newPos = 
+   let newPos =
          if cursorPos == (epsHistoryLength - 1)
-         then 0 
+         then 0
          else cursorPos + 1
    
-   writeIORef pulseCursor newPos
+   writeIORef pulseCursor newPos -- update cursor pos
 
 -- | Updates provided metrics with new execution time
 updateStackMetrics :: HiResTime -> StackMetrics -> IO ()
@@ -144,22 +141,19 @@ getStackPulses StackMetricsHandle{..} = do
    metricsMap <- readIORef hMetricsMap
    return . map (fmap stackPulse) $ Map.toList metricsMap
 
--- | Unwraps StackPulse into pair of max eps in history
--- and all last epsHistoryLength eps in history
-unwrapStackPulse :: StackPulse -> IO (Double, [Double])
+-- | Unwraps StackPulse eps in chronological order
+unwrapStackPulse :: StackPulse -> IO ([Double])
 unwrapStackPulse StackPulse{..} = do
-   maxEps <- V.read pulse 0
-   
    cursor <- readIORef pulseCursor
-   let getNext x = if x > 1 then (x - 1) else (epsHistoryLength - 1)
+   let getNext x = if x > 0 then (x - 1) else (epsHistoryLength - 1)
        reader :: Int -> IO [Double]
-       reader n = do
-         eps <- V.read pulse n
-         let n' = getNext n
-         if n' == getNext cursor
+       reader i = do
+         eps <- V.read pulse i
+         let i' = getNext i
+         if i' == getNext cursor
          then return [eps]
          else do
-            history <- reader n'
+            history <- reader i'
             return $ eps : history 
    pulseList <- reader $ getNext cursor
-   return (maxEps, pulseList)
+   return (pulseList)

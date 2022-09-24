@@ -15,14 +15,14 @@ import Types.Time (HiResTime)
 -- | Unique Id type.
 type StackId = Int
 
--- | Mutable vector wich stores maximal eps (index 0) and last 100 calculated eps.
+-- | Mutable vector wich stores last 'epsHistoryLength' calculated eps.
 -- Eps - executions per second.
 type Pulse = IOVector Double
 
 data StackPulse = StackPulse
    { pulse       :: Pulse
    , pulseCursor :: IORef Int
-   -- ^ Current vector position to fill up. 1 <= pulseCursor <= 100
+   -- ^ Current vector position to fill up. 0 <= pulseCursor <= epsHistoryLength
    }
 
 -- | Contains timings of last two calls.
